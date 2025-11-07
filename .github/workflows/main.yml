@@ -1,4 +1,4 @@
-name: CI-DockerBuild
+name: CI-CD MongoDB
 
 on:
   push:
@@ -19,7 +19,6 @@ jobs:
 
       - name: Package and push Helm Chart to Docker Hub (OCI)
         run: |
-          sed -i "s|{{ mongo_password }}|${{ secrets.MONGO_PASSWORD }}|g" ./chart/values.yaml
           helm package ./chart
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | helm registry login registry-1.docker.io --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
           helm push ./*.tgz oci://registry-1.docker.io/lpintofsgrp
@@ -46,4 +45,11 @@ jobs:
       - name: Deploy MongoDB chart from OCI to OpenShift
         run: |
           oc project lpintofsgrp-dev || oc new-project lpintofsgrp-dev
-          helm upgrade --install mongodb oci://registry-1.docker.io/lpintofsgrp/mongodb --version 0.1.0 -n lpintofsgrp-dev -f ./chart/values.yaml --wait --timeout 10m
+          helm upgrade --install mongodb oci://registry-1.docker.io/lpintofsgrp/mongodb \
+            --version 0.1.0 \
+            -n lpintofsgrp-dev \
+            -f ./chart/values.yaml \
+            --set mongo.password=${{ secrets.MONGO_PASSWORD }} \
+            --set image.repository=docker.io/library/mongo \
+            --set image.tag=6.0 \
+            --wait --timeout 10m
