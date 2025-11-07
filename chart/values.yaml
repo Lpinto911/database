@@ -1,0 +1,11 @@
+replicaCount: 1
+image:
+  repository: registry-1.docker.io/library/mongo
+  tag: "6.0"
+persistence:
+  size: 5Gi
+  storageClassName: ""
+mongo:
+  username: "adminuser"
+  password: "{{ mongo_password }}"
+  database: commentsdb
