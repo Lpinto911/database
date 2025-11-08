@@ -2,10 +2,11 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ .Release.Name }}
-  namespace: lpintofsgrp-dev
+  labels:
+    app: {{ .Release.Name }}
 spec:
   serviceName: "{{ .Release.Name }}"
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}
@@ -16,20 +17,29 @@ spec:
     spec:
       containers:
         - name: mongodb
-          image: docker.io/library/mongo:6.0
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           ports:
             - containerPort: 27017
           env:
             - name: MONGO_INITDB_ROOT_USERNAME
-              value: root
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: username
             - name: MONGO_INITDB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: mongodb-secret
                   key: password
+            - name: MONGO_INITDB_DATABASE
+              value: "{{ .Values.mongo.database }}"
           volumeMounts:
             - name: mongo-data
               mountPath: /data/db
+          # Añadido para compatibilidad en OpenShift (evita problemas de permisos)
+          securityContext:
+            runAsUser: 999
+            fsGroup: 999
   volumeClaimTemplates:
     - metadata:
         name: mongo-data
@@ -37,4 +47,7 @@ spec:
         accessModes: ["ReadWriteOnce"]
         resources:
           requests:
-            storage: 1Gi
+            storage: {{ .Values.persistence.size }}
+        {{- if .Values.persistence.storageClassName }}
+        storageClassName: "{{ .Values.persistence.storageClassName }}"
+        {{- end }}
