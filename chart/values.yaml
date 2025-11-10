@@ -1,14 +1,10 @@
 replicaCount: 1
-
 image:
-  repository: docker.io/library/mongo
-  tag: "6.0"
-
+  repository: postgres
+  tag: "16"
 persistence:
   size: 5Gi
-  storageClassName: ""
-
-mongo:
-  username: "adminuser"
-  password: "mi_password"  # ⚠️ Será reemplazado por GitHub Actions
-  database: "commentsdb"
+postgres:
+  username: postgres
+  password: "mi_password"
+  database: appdb
