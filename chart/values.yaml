@@ -4,7 +4,6 @@ image:
   tag: "16"
 persistence:
   size: 5Gi
-  storageClassName: gp3
 postgres:
   username: postgres
   password: "mi_password"
