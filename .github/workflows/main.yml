@@ -36,7 +36,52 @@ jobs:
           fi
           oc project lpintofsgrp-dev
 
-      # 5️⃣ Desplegar PostgreSQL con Helm
+      # 5️⃣ Desplegar PostgreSQL con Helmname: CI-CD PostgreSQL
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/openshift/origin-cli:latest  # Contenedor con OC CLI preinstalado
+
+    steps:
+      # 🧩 1. Clonar el repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 🧰 2. Instalar Helm
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.12.0
+
+      # 🔑 3. Log in to OpenShift
+      - name: Log in to OpenShift
+        uses: redhat-actions/oc-login@v1
+        with:
+          openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
+          openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
+
+      # 🚀 4. Crear proyecto si no existe
+      - name: Ensure OpenShift project exists
+        run: |
+          oc project lpintofsgrp-dev || oc new-project lpintofsgrp-dev
+
+      # 🛠 5. Deploy PostgreSQL via Helm
+      - name: Deploy PostgreSQL Helm chart
+        run: |
+          helm upgrade --install postgres ./chart \
+            -n lpintofsgrp-dev \
+            --set postgres.username=adminuser \
+            --set postgres.password=${{ secrets.POSTGRES_PASSWORD }} \
+            --set postgres.database=backenddb \
+            --wait --timeout 10m
+
       - name: Deploy PostgreSQL Helm chart
         run: |
           helm upgrade --install postgres ./chart \
