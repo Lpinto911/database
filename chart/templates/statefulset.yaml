@@ -15,8 +15,6 @@ spec:
       labels:
         app: {{ .Release.Name }}
     spec:
-      securityContext:        # 👈 Nivel de Pod
-        fsGroup: 999
       containers:
         - name: postgres
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -36,11 +34,3 @@ spec:
                   name: postgres-secret
                   key: password
           volumeMounts:
-            - name: postgres-data
-              mountPath: /var/lib/postgresql/data
-          securityContext:
-            runAsUser: 999
-      volumes:
-        - name: postgres-data
-          persistentVolumeClaim:
-            claimName: postgres-pvc
