@@ -38,7 +38,7 @@ jobs:
         run: |
           oc project lpintofsgrp-dev || oc new-project lpintofsgrp-dev
 
-      # 6️⃣ Desplegar PostgreSQL con Helm
+      # 6️⃣ Desplegar PostgreSQL sin esperar pods listos
       - name: Deploy PostgreSQL Helm chart
         run: |
           helm upgrade --install postgres ./chart \
@@ -46,6 +46,9 @@ jobs:
             --set postgres.username=adminuser \
             --set postgres.password=${{ secrets.POSTGRES_PASSWORD }} \
             --set postgres.database=backenddb \
-            --wait \
-            --timeout 15m \
-            --wait-for-jobs=false
+            --atomic
+
+      # 7️⃣ Esperar que los pods estén listos
+      - name: Wait for PostgreSQL pods to be ready
+        run: |
+          oc rollout status statefulset/postgres -n lpintofsgrp-dev --timeout=20m
