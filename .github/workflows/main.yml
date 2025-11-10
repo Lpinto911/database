@@ -34,21 +34,12 @@ jobs:
           openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
           openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
 
-      # 🐳 5. Iniciar sesión en Docker Hub (para acceder al chart)
-      - name: Log in to Docker Hub (OCI)
-        run: |
-          helm registry login registry-1.docker.io \
-            --username ${{ secrets.DOCKER_USERNAME }} \
-            --password ${{ secrets.DOCKERHUB_TOKEN }}
-
-      # 🚀 6. Desplegar PostgreSQL desde Docker Hub
-      - name: Deploy PostgreSQL chart from OCI
+      # 🚀 5. Desplegar PostgreSQL directamente desde la carpeta ./chart
+      - name: Deploy PostgreSQL Helm chart
         run: |
           oc project lpintofsgrp-dev || oc new-project lpintofsgrp-dev
-          helm upgrade --install postgres oci://registry-1.docker.io/lpintofsgrp/postgres \
-            --version 0.1.0 \
+          helm upgrade --install postgres ./chart \
             -n lpintofsgrp-dev \
-            -f ./chart/values.yaml \
             --set postgres.username=adminuser \
             --set postgres.password=${{ secrets.POSTGRES_PASSWORD }} \
             --set postgres.database=backenddb \
