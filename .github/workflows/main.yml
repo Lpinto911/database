@@ -8,39 +8,44 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # 🧩 1. Clonar el repositorio
+      # 1️⃣ Clonar el repositorio
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 🧰 2. Instalar la CLI de OpenShift
+      # 2️⃣ Instalar CLI de OpenShift
       - name: Install OC CLI
         run: |
           curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz | tar xz
           sudo mv oc /usr/local/bin/
           oc version
 
-      # ⚙️ 3. Instalar Helm
+      # 3️⃣ Instalar Helm
       - name: Install Helm
         uses: azure/setup-helm@v3
         with:
           version: v3.12.0
 
-      # 🔑 4. Iniciar sesión en OpenShift
+      # 4️⃣ Iniciar sesión en OpenShift
       - name: Log in to OpenShift
         uses: redhat-actions/oc-login@v1
         with:
           openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
           openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
 
-      # 🚀 5. Desplegar PostgreSQL directamente desde la carpeta ./chart
-      - name: Deploy PostgreSQL Helm chart
+      # 5️⃣ Crear o cambiar proyecto
+      - name: Set OpenShift project
         run: |
           oc project lpintofsgrp-dev || oc new-project lpintofsgrp-dev
+
+      # 6️⃣ Desplegar PostgreSQL con Helm
+      - name: Deploy PostgreSQL Helm chart
+        run: |
           helm upgrade --install postgres ./chart \
             -n lpintofsgrp-dev \
             --set postgres.username=adminuser \
             --set postgres.password=${{ secrets.POSTGRES_PASSWORD }} \
             --set postgres.database=backenddb \
-            --wait --timeout 10m
+            --wait \
+            --timeout 15m \
+            --wait-for-jobs=false
