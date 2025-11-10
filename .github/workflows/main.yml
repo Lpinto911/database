@@ -1,4 +1,4 @@
-name: CI-CD MongoDB
+name: CI-CD PostgreSQL
 
 on:
   push:
@@ -36,19 +36,20 @@ jobs:
           sudo mv oc /usr/local/bin/
           oc version
 
-      - name: Log in Openshift
+      - name: Log in to OpenShift
         uses: redhat-actions/oc-login@v1
         with:
           openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
           openshift_token: ${{ secrets.OPENSHIFT_TOKEN }}
 
-      - name: Deploy MongoDB chart from OCI to OpenShift
+      - name: Deploy PostgreSQL chart from OCI to OpenShift
         run: |
           oc project lpintofsgrp-dev || oc new-project lpintofsgrp-dev
-          helm upgrade --install mongodb oci://registry-1.docker.io/lpintofsgrp/mongodb \
+          helm upgrade --install postgres oci://registry-1.docker.io/lpintofsgrp/postgres \
             --version 0.1.0 \
             -n lpintofsgrp-dev \
             -f ./chart/values.yaml \
-            --set mongo.username=adminuser \
-            --set mongo.password=${{ secrets.MONGO_PASSWORD }} \
+            --set postgres.username=adminuser \
+            --set postgres.password=${{ secrets.POSTGRES_PASSWORD }} \
+            --set postgres.database=backenddb \
             --wait --timeout 10m
