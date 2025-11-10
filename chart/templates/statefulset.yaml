@@ -1,28 +1,28 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: postgres
+  name: {{ .Release.Name }}
   labels:
-    app: postgres
+    app: {{ .Release.Name }}
 spec:
-  serviceName: "postgres"
-  replicas: 1
+  serviceName: "{{ .Release.Name }}"
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: postgres
+      app: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: postgres
+        app: {{ .Release.Name }}
     spec:
       containers:
         - name: postgres
-          image: postgres:16
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           ports:
             - containerPort: 5432
           env:
             - name: POSTGRES_DB
-              value: appdb
+              value: "{{ .Values.postgres.database }}"
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
@@ -33,12 +33,12 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: password
-            - name: PGDATA               # 👈 importante
+            - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           volumeMounts:
             - name: postgres-data
-              mountPath: /var/lib/postgresql/data/pgdata  # 👈 subcarpeta
+              mountPath: /var/lib/postgresql/data/pgdata
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
-            claimNam
+            claimName: postgres-pvc
